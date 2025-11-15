@@ -24,7 +24,7 @@ public sealed class AsyncGuardScheduler : IDisposable
         if (every <= TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(every));
 
-        var scheduledTask = new ScheduledTask(taskFactory, every, taskName, logger);
+        var scheduledTask = new ScheduledTask(this, taskFactory, every, taskName, logger);
         lock (_tasks)
         {
             if (_disposed)
@@ -56,13 +56,16 @@ public sealed class AsyncGuardScheduler : IDisposable
 
     private sealed class ScheduledTask : IDisposable
     {
+        private readonly AsyncGuardScheduler _owner;
         private readonly Func<Task> _factory;
         private readonly ILogger? _logger;
         private readonly string _taskName;
         private readonly Timer _timer;
+        private bool _disposed;
 
-        public ScheduledTask(Func<Task> factory, TimeSpan interval, string? taskName, ILogger? logger)
+        public ScheduledTask(AsyncGuardScheduler owner, Func<Task> factory, TimeSpan interval, string? taskName, ILogger? logger)
         {
+            _owner = owner;
             _factory = factory;
             _logger = logger;
             _taskName = taskName ?? "ScheduledTask";
@@ -84,7 +87,16 @@ public sealed class AsyncGuardScheduler : IDisposable
 
         public void Dispose()
         {
+            if (_disposed)
+                return;
+
             _timer.Dispose();
+            _disposed = true;
+
+            lock (_owner._tasks)
+            {
+                _owner._tasks.Remove(this);
+            }
         }
     }
 }

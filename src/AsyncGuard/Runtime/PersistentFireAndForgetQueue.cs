@@ -16,6 +16,7 @@ public sealed class PersistentFireAndForgetQueue : IAsyncDisposable, IDisposable
     private readonly SemaphoreSlim _storageGate = new(1, 1);
     private readonly CancellationTokenSource _cts = new();
     private Task? _processingTask;
+    private CancellationTokenRegistration _externalRegistration;
 
     public PersistentFireAndForgetQueue(PersistentFireAndForgetOptions? options = null, ILogger? logger = null)
     {
@@ -47,6 +48,11 @@ public sealed class PersistentFireAndForgetQueue : IAsyncDisposable, IDisposable
     {
         if (_processingTask is not null)
             return Task.CompletedTask;
+
+        if (cancellationToken.CanBeCanceled)
+        {
+            _externalRegistration = cancellationToken.Register(() => _cts.Cancel());
+        }
 
         _processingTask = Task.Run(ProcessLoopAsync, _cts.Token);
         return Task.CompletedTask;
@@ -183,6 +189,7 @@ public sealed class PersistentFireAndForgetQueue : IAsyncDisposable, IDisposable
         }
 
         _storageGate.Dispose();
+        _externalRegistration.Dispose();
         _cts.Dispose();
     }
 

@@ -89,4 +89,33 @@ public class PersistentQueueTests
         if (File.Exists(tempFile))
             File.Delete(tempFile);
     }
+
+    [Fact]
+    public async Task StartAsyncHonorsCancellationToken()
+    {
+        var tempFile = Path.Combine(Path.GetTempPath(), $"asyncguard-test-{Guid.NewGuid()}.json");
+        var options = new PersistentFireAndForgetOptions
+        {
+            StoragePath = tempFile
+        };
+
+        await using var queue = new PersistentFireAndForgetQueue(options);
+        var processed = 0;
+        queue.RegisterHandler("noop", (ctx, token) =>
+        {
+            processed++;
+            return Task.CompletedTask;
+        });
+
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+        await queue.StartAsync(cts.Token);
+
+        await queue.EnqueueAsync("noop", new { });
+
+        await Task.Delay(200);
+        Assert.Equal(0, processed);
+        if (File.Exists(tempFile))
+            File.Delete(tempFile);
+    }
 }

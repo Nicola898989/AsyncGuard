@@ -53,6 +53,8 @@ public class PipelineResetTests
             .FireAndForget(logger, "PluginJob");
         await guard;
 
+        await AsyncTestHelpers.WaitFor(() => stages.Contains(AsyncGuardPipelineStage.Error), 2000);
+
         Assert.Contains(AsyncGuardPipelineStage.Start, stages);
         Assert.Contains(AsyncGuardPipelineStage.Error, stages);
     }

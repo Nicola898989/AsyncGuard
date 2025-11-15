@@ -19,6 +19,12 @@ public class DecoratorTests
         Task RunAsync();
     }
 
+    public interface ITypedJobService
+    {
+        [AsyncGuardRetry(retryCount: 0)]
+        Task<int> GetValueAsync();
+    }
+
     private sealed class FailingJobService : IJobService
     {
         private readonly Action _onInvoke;
@@ -53,6 +59,21 @@ public class DecoratorTests
         }
     }
 
+    private sealed class TypedJobService : ITypedJobService
+    {
+        private readonly int _value;
+
+        public TypedJobService(int value)
+        {
+            _value = value;
+        }
+
+        public Task<int> GetValueAsync()
+        {
+            return Task.FromResult(_value);
+        }
+    }
+
     [Fact]
     public async Task DecoratorAppliesFireAndForgetBehavior()
     {
@@ -61,7 +82,7 @@ public class DecoratorTests
         var service = new FailingJobService(() => calls++);
         var decorated = AsyncGuardDecorator.Create<IJobService>(service, logger);
 
-        await decorated.RunAsync();
+        await Assert.ThrowsAsync<InvalidOperationException>(decorated.RunAsync);
 
         await AsyncTestHelpers.WaitFor(() => logger.Entries.Any(e => e.Level == LogLevel.Error), 2000);
         Assert.True(calls >= 1);
@@ -76,10 +97,23 @@ public class DecoratorTests
         var service = new InterfaceAttributedJobService(() => calls++);
         var decorated = AsyncGuardDecorator.Create<IAttributedJobService>(service, logger);
 
-        await decorated.RunAsync();
+        await Assert.ThrowsAsync<InvalidOperationException>(decorated.RunAsync);
 
         await AsyncTestHelpers.WaitFor(() => logger.Entries.Any(e => e.Level == LogLevel.Error), 2000);
         Assert.True(calls >= 1);
         Assert.Contains(logger.Entries, entry => entry.Level == LogLevel.Error);
+    }
+
+    [Fact]
+    public async Task DecoratorSupportsTaskOfT()
+    {
+        var logger = new TestLogger();
+        var service = new TypedJobService(42);
+        var decorated = AsyncGuardDecorator.Create<ITypedJobService>(service, logger);
+
+        var result = await decorated.GetValueAsync();
+
+        Assert.Equal(42, result);
+        Assert.Empty(logger.Entries);
     }
 }

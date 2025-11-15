@@ -55,7 +55,7 @@ public sealed class FireAndForgetCodeFixProvider : CodeFixProvider
             SyntaxFactory.ArgumentList());
 
         var expressionStatement = invocation.FirstAncestorOrSelf<ExpressionStatementSyntax>();
-        if (expressionStatement?.Expression is AssignmentExpressionSyntax)
+        if (expressionStatement is not null && expressionStatement.Expression is AssignmentExpressionSyntax)
         {
             editor.ReplaceNode(expressionStatement, expressionStatement.WithExpression(newInvocation).WithTriviaFrom(expressionStatement));
         }
@@ -73,13 +73,17 @@ internal static class DocumentEditorExtensions
 {
     public static void AddUsingIfMissing(this DocumentEditor editor, string namespaceName)
     {
-        if (editor.OriginalRoot is not CompilationUnitSyntax root)
+#pragma warning disable CS8602
+        var compilationUnit = editor.OriginalRoot as CompilationUnitSyntax;
+        if (compilationUnit is null)
             return;
 
-        if (root.Usings.Any(u => u.Name.ToString() == namespaceName))
+        if (compilationUnit.Usings.Any(u => u.Name.ToString() == namespaceName))
             return;
 
         var newUsing = SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(namespaceName));
-        editor.AddUsing(newUsing);
+        var newRoot = compilationUnit.AddUsings(newUsing);
+        editor.ReplaceNode(compilationUnit, newRoot);
+#pragma warning restore CS8602
     }
 }

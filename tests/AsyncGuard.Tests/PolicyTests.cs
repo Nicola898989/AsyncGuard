@@ -36,7 +36,7 @@ public class PolicyTests
     [Fact]
     public async Task PolicyCanDisableTimeout()
     {
-        AsyncGuard.Configure(options =>
+        using var scope = AsyncGuard.Override(options =>
         {
             options.DefaultLogLevel = LogLevel.None;
         });

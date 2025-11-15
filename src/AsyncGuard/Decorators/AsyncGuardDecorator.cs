@@ -36,29 +36,23 @@ public static class AsyncGuardDecorator
             var attr = GetAttribute(targetMethod);
             if (attr is not null && typeof(Task).IsAssignableFrom(targetMethod.ReturnType))
             {
-                Func<Task> factory = () =>
+                Task task;
+                try
                 {
-                    var result = (Task?)targetMethod.Invoke(_implementation, args) ?? Task.CompletedTask;
-                    return result;
-                };
+                    task = (Task?)targetMethod.Invoke(_implementation, args) ?? Task.CompletedTask;
+                }
+                catch (TargetInvocationException ex) when (ex.InnerException is not null)
+                {
+                    task = Task.FromException(ex.InnerException);
+                    ScheduleGuard(task, attr, targetMethod.Name);
+                    throw ex.InnerException;
+                }
 
-                var timeout = attr.TimeoutMilliseconds > 0 ? TimeSpan.FromMilliseconds(attr.TimeoutMilliseconds) : (TimeSpan?)null;
-                return factory.FireAndForget(
-                    _logger,
-                    attr.TaskName ?? targetMethod.Name,
-                    timeout,
-                    attr.RetryCount,
-                    attr.Backoff);
+                ScheduleGuard(task, attr, targetMethod.Name);
+                return task;
             }
 
-            try
-            {
-                return targetMethod.Invoke(_implementation, args);
-            }
-            catch (TargetInvocationException ex) when (ex.InnerException is not null)
-            {
-                throw ex.InnerException;
-            }
+            return InvokeTarget(targetMethod, args);
         }
 
         private AsyncGuardRetryAttribute? GetAttribute(MethodInfo interfaceMethod)
@@ -70,6 +64,29 @@ public static class AsyncGuardDecorator
             var parameters = interfaceMethod.GetParameters().Select(p => p.ParameterType).ToArray();
             var implementationMethod = _implementation!.GetType().GetMethod(interfaceMethod.Name, parameters);
             return implementationMethod?.GetCustomAttribute<AsyncGuardRetryAttribute>();
+        }
+
+        private void ScheduleGuard(Task task, AsyncGuardRetryAttribute attr, string methodName)
+        {
+            var timeout = attr.TimeoutMilliseconds > 0 ? TimeSpan.FromMilliseconds(attr.TimeoutMilliseconds) : (TimeSpan?)null;
+            _ = task.FireAndForget(
+                _logger,
+                attr.TaskName ?? methodName,
+                timeout,
+                attr.RetryCount,
+                attr.Backoff);
+        }
+
+        private object? InvokeTarget(MethodInfo method, object?[]? args)
+        {
+            try
+            {
+                return method.Invoke(_implementation, args);
+            }
+            catch (TargetInvocationException ex) when (ex.InnerException is not null)
+            {
+                throw ex.InnerException;
+            }
         }
     }
 }

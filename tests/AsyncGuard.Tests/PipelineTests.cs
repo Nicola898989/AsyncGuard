@@ -55,6 +55,8 @@ public class PipelineTests
         var logger = new TestLogger();
         await new Func<Task>(Operation).FireAndForget(logger, "PipelineJob", retryCount: 1);
 
+        await AsyncTestHelpers.WaitFor(() => stages.Contains(AsyncGuardPipelineStage.Complete), 2000);
+
         Assert.Contains(AsyncGuardPipelineStage.Start, stages);
         Assert.Contains(AsyncGuardPipelineStage.Retry, stages);
         Assert.Contains(AsyncGuardPipelineStage.Complete, stages);
@@ -92,6 +94,8 @@ public class PipelineTests
         var logger = new TestLogger();
         await Task.CompletedTask.FireAndForget(logger, "PipelineSuccess");
 
+        await AsyncTestHelpers.WaitFor(() => stages.Count >= 2, 2000);
+
         Assert.Equal(new[] { AsyncGuardPipelineStage.Start, AsyncGuardPipelineStage.Complete }, stages);
     }
 
@@ -110,6 +114,8 @@ public class PipelineTests
             .FireAndForget(logger, "PluginJob");
 
         await guard;
+
+        await AsyncTestHelpers.WaitFor(() => CapturedContexts.Any(ctx => ctx.Stage == AsyncGuardPipelineStage.Error), 2000);
 
         Assert.True(CapturedContexts.Count > contextsBefore);
         Assert.Contains(CapturedContexts, ctx => ctx.Stage == AsyncGuardPipelineStage.Error);
