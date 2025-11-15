@@ -10,6 +10,9 @@
     <Description>AsyncGuard adds safe fire-and-forget semantics (logging, retry, timeout, telemetry, policy, plugins) to .NET background tasks.</Description>
     <PackageIcon>AsyncGuard.png</PackageIcon>
     <PackageReadmeFile>README.NuGet.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/Nicola898989/AsyncGuard</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Nicola898989/AsyncGuard</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
