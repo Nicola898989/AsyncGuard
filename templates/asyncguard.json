@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "defaults": {
+    "timeoutSeconds": 15,
+    "retryCount": 2,
+    "backoff": "Linear",
+    "logLevel": "Information",
+    "useToonFormat": true
+  },
+  "pipelines": [
+    {
+      "name": "onError",
+      "actions": [
+        "ILogger",
+        "OpenTelemetry",
+        "AsyncGuardEventSource"
+      ]
+    }
+  ]
+}

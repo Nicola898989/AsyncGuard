@@ -1,0 +1,18 @@
+// AsyncGuard Failure Trend
+let timeRange = 24h;
+let data = print TaskName:string="" , Outcome:string="";
+AsyncGuardLogs
+| where Timestamp > ago(timeRange)
+| summarize Failures = count() by TaskName, bin(Timestamp, 1h)
+| render timechart
+
+// Timeout Analysis
+AsyncGuardLogs
+| where Outcome == "Timeout"
+| summarize Count = count() by TaskName
+| top 10 by Count
+
+// Retry Heatmap
+AsyncGuardLogs
+| summarize Attempts = avg(RetryCount) by TaskName
+| render barchart

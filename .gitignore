@@ -1,0 +1,23 @@
+# Build results
+bin/
+obj/
+
+# Visual Studio / VS Code
+.vs/
+.vscode/
+
+# User-specific
+*.user
+*.suo
+
+# NuGet packages
+*.nupkg
+*.snupkg
+
+# OS / tooling
+.DS_Store
+.idea/
+
+# Test artifacts
+TestResults/
+*.trx
