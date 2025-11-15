@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <PackageId>AsyncGuard</PackageId>
-    <Authors>AsyncGuard Contributors</Authors>
+    <Authors>Nicola Santoro</Authors>
     <Description>AsyncGuard adds safe fire-and-forget semantics (logging, retry, timeout, telemetry, policy, plugins) to .NET background tasks.</Description>
     <PackageIcon>AsyncGuard.png</PackageIcon>
     <PackageReadmeFile>README.NuGet.md</PackageReadmeFile>
