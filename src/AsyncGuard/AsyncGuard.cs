@@ -76,6 +76,7 @@ public static class AsyncGuard
             _options = new AsyncGuardOptions();
         }
         AsyncGuardPolicies.Reset();
+        AsyncGuardPipeline.Reset();
     }
 
     internal static AsyncGuardOptions Snapshot()
@@ -152,6 +153,22 @@ public static class AsyncGuard
     /// </summary>
     public static void UsePlugin(IAsyncGuardPlugin plugin)
     {
-        ConfigurePipeline(builder => builder.AddPlugin(plugin));
+        if (plugin is null)
+            throw new ArgumentNullException(nameof(plugin));
+
+        var snapshot = AsyncGuardPipeline.Snapshot();
+        ConfigurePipeline(builder =>
+        {
+            foreach (var handler in snapshot.OnStart)
+                builder.OnStart(handler);
+            foreach (var handler in snapshot.OnRetry)
+                builder.OnRetry(handler);
+            foreach (var handler in snapshot.OnError)
+                builder.OnError(handler);
+            foreach (var handler in snapshot.OnComplete)
+                builder.OnComplete(handler);
+
+            builder.AddPlugin(plugin);
+        });
     }
 }

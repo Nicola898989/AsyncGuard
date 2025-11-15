@@ -5,6 +5,7 @@ using AsyncGuard.Tests.Infrastructure;
 
 namespace AsyncGuard.Tests;
 
+[Collection("AsyncGuardPipeline")]
 public class PipelineTests
 {
     public PipelineTests()

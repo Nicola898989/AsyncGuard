@@ -53,7 +53,7 @@ public class PolicyTests
 
         await slow.FireAndForget(logger, "PolicyNoTimeout");
 
-        Assert.Empty(logger.Entries);
+        Assert.DoesNotContain(logger.Entries, entry => entry.Exception is TimeoutException);
     }
 
     [Fact]

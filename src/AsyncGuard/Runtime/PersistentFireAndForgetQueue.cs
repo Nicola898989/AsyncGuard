@@ -85,7 +85,8 @@ public sealed class PersistentFireAndForgetQueue : IAsyncDisposable, IDisposable
                     continue;
                 }
 
-                var payloadElement = JsonDocument.Parse(job.Payload).RootElement.Clone();
+                using var document = JsonDocument.Parse(job.Payload);
+                var payloadElement = document.RootElement.Clone();
                 var context = new PersistentJobContext(job.Id, job.JobType, job.EnqueuedAt, payloadElement);
 
                 try

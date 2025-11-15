@@ -22,7 +22,11 @@ internal static class AsyncGuardPipeline
     {
         lock (Sync)
         {
-            return _configuration;
+            return new AsyncGuardPipelineBuilder.PipelineConfiguration(
+                _configuration.OnStart.ToArray(),
+                _configuration.OnRetry.ToArray(),
+                _configuration.OnError.ToArray(),
+                _configuration.OnComplete.ToArray());
         }
     }
 
