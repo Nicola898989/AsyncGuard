@@ -5,6 +5,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
+    <PackageId>AsyncGuard</PackageId>
+    <Authors>AsyncGuard Contributors</Authors>
+    <Description>AsyncGuard adds safe fire-and-forget semantics (logging, retry, timeout, telemetry, policy, plugins) to .NET background tasks.</Description>
+    <PackageIcon>AsyncGuard.png</PackageIcon>
+    <PackageReadmeFile>README.NuGet.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +19,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AsyncGuard.Analyzers\AsyncGuard.Analyzers.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="AsyncGuard.png" Pack="true" PackagePath="" />
+    <None Include="README.NuGet.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
 </Project>
